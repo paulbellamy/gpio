@@ -1,4 +1,3 @@
-gpio
-====
+# gpio
 
-Experimental Untested GPIO Library for Google Go on the Raspberry Pi
+Experimental, untested GPIO Library for Google Go on the Raspberry Pi.
