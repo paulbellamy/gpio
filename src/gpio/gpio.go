@@ -243,7 +243,12 @@ func (p *pin) stopPwmLoop() error {
 
 // Set the percentage of power to this pwm port from 0-100
 func (p *pin) SetPWM(value int) error {
-	p.startPwmLoop(value)
+	if value == 0 {
+		p.stopPwmLoop()
+		p.SetLow()
+	} else {
+		p.startPwmLoop(value)
+	}
 	return nil
 }
 
