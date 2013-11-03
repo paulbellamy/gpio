@@ -186,13 +186,30 @@ func (p *pin) startPwmLoop(initialValue int) {
 		var period time.Duration = 20 * time.Millisecond
 		var highDuration time.Duration
 		var ticker *time.Ticker = time.NewTicker(period)
-		defer ticker.Stop()
+		defer func() {
+			// cleanup
+			close(p.pwmLoop)
+			close(p.quitPwmLoop)
+
+			p.pwmLoop = nil
+			p.quitPwmLoop = nil
+
+			ticker.Stop()
+		}()
 
 		for {
 			select {
 			case v := <-p.pwmLoop:
-				// all v received by this are 0 < v < 100
-				highDuration = valueToDuration(v, period)
+				switch {
+				case v == 0:
+					p.SetLow()
+					return
+				case v == 100:
+					p.SetHigh()
+					return
+				default:
+					highDuration = valueToDuration(v, period)
+				}
 			case reply := <-p.quitPwmLoop:
 				reply <- nil
 				return
@@ -234,9 +251,6 @@ func (p *pin) stopPwmLoop() error {
 	}
 	reply := make(chan error)
 	p.quitPwmLoop <- reply
-
-	p.pwmLoop = nil
-	p.quitPwmLoop = nil
 
 	return <-reply
 }
